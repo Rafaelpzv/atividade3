@@ -9,45 +9,45 @@ const listar = async (req, res) => {
     }
 };
 
-const buscarPorRa = (req, res) => {
+const buscarPorRa = async (req, res) => {
     try {
         const { ra } = req.params;
-        const aluno = alunoService.buscarAlunoPorRa(ra);
+        const aluno = await alunoService.buscarAlunoPorRa(ra);
         res.status(200).json(aluno);
     } catch (err) {
         res.status(404).json({ erro: err.message });
     }
 };
 
-const listarDisciplinas = (req, res) => {
+const listarDisciplinas = async (req, res) => {
     try {
         const { ra } = req.params;
-        const disciplinas = alunoService.listarDisciplinas(ra);
+        const disciplinas = await alunoService.listarDisciplinas(ra);
         res.status(200).json(disciplinas);
     } catch (err) {
         res.status(404).json({ erro: err.message });
     }
 };
 
-const criar = (req, res) => {
+const criar = async (req, res) => {
     try {
         const novoAluno = req.body;
-        const alunoCriado = alunoService.criarAluno(novoAluno);
-	res.status(201).json({
-	    mensagem: `Aluno "${alunoCriado.nome}" criado com sucesso.`,
-	    ra: alunoCriado.ra,
-	    nome: alunoCriado.nome
-	});
+        const alunoCriado = await alunoService.criarAluno(novoAluno);
+        res.status(201).json({
+            mensagem: `Aluno "${alunoCriado.nome}" criado com sucesso.`,
+            ra: alunoCriado.ra,
+            nome: alunoCriado.nome
+        });
     } catch (err) {
         res.status(400).json({ erro: err.message });
     }
 };
 
-const atualizar = (req, res) => {
+const atualizar = async (req, res) => {
     try {
         const { ra } = req.params;
         const dados = req.body;
-        const alunoAtualizado = alunoService.atualizarAluno(ra, dados);
+        const alunoAtualizado = await alunoService.atualizarAluno(ra, dados);
         res.status(200).json({
             mensagem: `Aluno com RA ${ra} atualizado com sucesso.`,
             aluno: alunoAtualizado
@@ -58,13 +58,15 @@ const atualizar = (req, res) => {
     }
 };
 
-const deletar = (req, res) => {
+const deletar = async (req, res) => {
     try {
         const { ra } = req.params;
-        const alunoRemovido = alunoService.deletarAluno(ra);
+        const alunoRemovido = await alunoService.deletarAluno(ra);
         res.status(200).json({
             mensagem: `Aluno com RA ${ra} removido com sucesso.`,
-            aluno: alunoRemovido
+            aluno: alunoRemovido,
+            ra: alunoRemovido.ra,
+            nome: alunoRemovido.nome
         });
     } catch (err) {
         res.status(404).json({ erro: err.message });
