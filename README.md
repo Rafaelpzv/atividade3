@@ -380,7 +380,9 @@ curl -X DELETE http://localhost:3000/alunos/4
 - Campos de texto recebem `trim()` automaticamente; `codigo` é normalizado para maiúsculas
 - `PUT` sem nenhum campo no body retorna `400`
 
----# API Escola
+---
+
+# API Escola
 
 API RESTful para gerenciamento de alunos e suas disciplinas, desenvolvida com **Node.js** e **Express**, organizada em camadas (MVC).
 
