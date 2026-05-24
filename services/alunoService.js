@@ -1,5 +1,7 @@
+// services/alunoService.js
 const alunosData = require('../data/alunosData');
 
+// ----- Funções auxiliares (síncronas) -----
 function isDisciplinaValida(disciplina) {
     return (
         disciplina &&
@@ -14,7 +16,6 @@ function findCodigoDuplicado(disciplinas) {
     return codigos.find((codigo, index) => codigos.indexOf(codigo) !== index) || null;
 }
 
-
 function sanitizeDisciplina(disciplina) {
     return {
         codigo: disciplina.codigo.trim().toUpperCase(),
@@ -23,37 +24,44 @@ function sanitizeDisciplina(disciplina) {
     };
 }
 
-function listarAlunos() {
-    return alunosData.getAll();
+// ----- Serviços (assíncronos) -----
+async function listarAlunos() {
+    return await alunosData.getAll();
 }
 
-function buscarAlunoPorRa(ra) {
-    const aluno = alunosData.findByRa(ra);
-    if (!aluno) throw new Error(`Aluno com RA ${ra} não encontrado.`);
+async function buscarAlunoPorRa(ra) {
+    const aluno = await alunosData.findByRa(ra);
+    if (!aluno) {
+        throw new Error(`Aluno com RA ${ra} não encontrado.`);
+    }
     return aluno;
 }
 
-function listarDisciplinas(ra) {
-    const aluno = buscarAlunoPorRa(ra);
+async function listarDisciplinas(ra) {
+    const aluno = await buscarAlunoPorRa(ra);
     return aluno.disciplinas;
 }
 
-function criarAluno(novoAluno) {
+async function criarAluno(novoAluno) {
     const { ra, nome, disciplinas } = novoAluno;
 
-   if (!ra || typeof ra !== 'string' || ra.trim() === '') {
+    // Validações síncronas
+    if (!ra || typeof ra !== 'string' || ra.trim() === '') {
         throw new Error('O campo "ra" é obrigatório e deve ser uma string não vazia.');
     }
     if (!nome || typeof nome !== 'string' || nome.trim() === '') {
         throw new Error('O campo "nome" é obrigatório e deve ser uma string não vazia.');
     }
-    if (alunosData.findByRa(ra)) {
+
+    // Verifica se RA já existe (assíncrono)
+    const existe = await alunosData.findByRa(ra);
+    if (existe) {
         throw new Error(`Já existe um aluno com o RA ${ra}.`);
     }
 
     let disciplinasValidada = [];
     if (disciplinas && Array.isArray(disciplinas)) {
-       const invalida = disciplinas.find(d => !isDisciplinaValida(d));
+        const invalida = disciplinas.find(d => !isDisciplinaValida(d));
         if (invalida) {
             throw new Error('Cada disciplina deve conter os campos "codigo", "nome" e "professor" preenchidos.');
         }
@@ -72,13 +80,17 @@ function criarAluno(novoAluno) {
         disciplinas: disciplinasValidada
     };
 
-    return alunosData.insert(aluno);
+    return await alunosData.insert(aluno);
 }
 
-function atualizarAluno(ra, dadosAtualizacao) {
+async function atualizarAluno(ra, dadosAtualizacao) {
     const { nome, disciplinas } = dadosAtualizacao;
-    const index = alunosData.findIndexByRa(ra);
-    if (index === -1) throw new Error(`Aluno com RA ${ra} não encontrado.`);
+
+    // Verifica se o aluno existe (assíncrono)
+    const existe = await alunosData.findByRa(ra);
+    if (!existe) {
+        throw new Error(`Aluno com RA ${ra} não encontrado.`);
+    }
 
     const atualizacao = {};
 
@@ -108,13 +120,15 @@ function atualizarAluno(ra, dadosAtualizacao) {
         throw new Error('Nenhum campo para atualizar foi fornecido. Envie "nome" e/ou "disciplinas".');
     }
 
-    return alunosData.update(index, atualizacao);
+    return await alunosData.update(ra, atualizacao);
 }
 
-function deletarAluno(ra) {
-    const index = alunosData.findIndexByRa(ra);
-    if (index === -1) throw new Error(`Aluno com RA ${ra} não encontrado.`);
-    return alunosData.remove(index);
+async function deletarAluno(ra) {
+    const alunoRemovido = await alunosData.remove(ra);
+    if (!alunoRemovido) {
+        throw new Error(`Aluno com RA ${ra} não encontrado.`);
+    }
+    return alunoRemovido;
 }
 
 module.exports = {

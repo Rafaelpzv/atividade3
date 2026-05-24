@@ -1,9 +1,15 @@
 require('dotenv').config();
 const express = require('express');
-const app = express();
+const connectDB = require('./config/database');
 const alunosRoutes = require('./routes/alunos');
 
+const app = express();
 const PORT = process.env.PORT || 3000;
+
+connectDB();
+
+app.use(express.json());
+app.use('/alunos', alunosRoutes);
 
 app.get('/help', (req, res) => {
     const baseUrl = `http://localhost:${PORT}`;

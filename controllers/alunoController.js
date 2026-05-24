@@ -1,8 +1,8 @@
 const alunoService = require('../services/alunoService');
 
-const listar = (req, res) => {
+const listar = async (req, res) => {
     try {
-        const alunos = alunoService.listarAlunos();
+        const alunos = await alunoService.listarAlunos();
         res.status(200).json(alunos);
     } catch (err) {
         res.status(500).json({ erro: err.message });
@@ -33,10 +33,11 @@ const criar = (req, res) => {
     try {
         const novoAluno = req.body;
         const alunoCriado = alunoService.criarAluno(novoAluno);
-        res.status(201).json({
-            mensagem: 'Aluno criado com sucesso.',
-            aluno: alunoCriado
-        });
+	res.status(201).json({
+	    mensagem: `Aluno "${alunoCriado.nome}" criado com sucesso.`,
+	    ra: alunoCriado.ra,
+	    nome: alunoCriado.nome
+	});
     } catch (err) {
         res.status(400).json({ erro: err.message });
     }
