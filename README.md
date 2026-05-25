@@ -1,414 +1,30 @@
-## API Escola
-
-API RESTful para gerenciamento de alunos e suas disciplinas, desenvolvida com **Node.js** e **Express**, organizada em camadas (MVC).
-
----
-
-## Tecnologias
-
-- [Node.js](https://nodejs.org/) — runtime JavaScript
-- [Express](https://expressjs.com/) — framework HTTP
-- [MongoDB Driver](https://www.mongodb.com/docs/drivers/node/current/) — conexão com o banco de dados
-- [dotenv](https://github.com/motdotla/dotenv) — variáveis de ambiente
-
----
-
-## Estrutura do projeto
-
-```
-escola-api/
-├── data/
-│   └── alunos.js           # dados em memória
-├── controllers/
-│   └── alunoController.js  # lógica de negócio e validações
-├── routes/
-│   └── alunos.js           # definição dos endpoints
-├── server.js               # configuração do Express
-├── .env                    # variáveis de ambiente (não commitar)
-├── .gitignore
-└── package.json
-```
-
----
-
-## Como executar
-
-**Pré-requisitos:**
-- Node.js 14 ou superior
-- Uma instância do MongoDB acessível (local ou [MongoDB Atlas](https://www.mongodb.com/atlas))
-
-```bash
-# 1. Instale as dependências
-npm install
-
-# 2. Configure as variáveis de ambiente (veja seção abaixo)
-
-# 3. Inicie o servidor
-npm start
-```
-
-O servidor estará disponível em `http://localhost:3000`.
-
----
-
-## Variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
-
-```env
-PORT=3000
-NODE_ENV=development
-MONGO_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/<nome-do-banco>
-```
-
-> **MongoDB Atlas:** acesse [cloud.mongodb.com](https://cloud.mongodb.com), crie um cluster gratuito e copie a connection string gerada na aba **Connect → Drivers**.  
-> **MongoDB local:** use `MONGO_URI=mongodb://localhost:27017/escola`
-
-O arquivo `.env` está no `.gitignore` e **não deve ser commitado**.
-
----
-
-## Endpoints
-
-| Método   | Rota                      | Descrição                          |
-|----------|---------------------------|------------------------------------|
-| `GET`    | `/alunos`                 | Lista todos os alunos              |
-| `GET`    | `/alunos/:ra`             | Busca um aluno pelo RA             |
-| `GET`    | `/alunos/:ra/disciplinas` | Lista as disciplinas de um aluno   |
-| `POST`   | `/alunos`                 | Cria um novo aluno                 |
-| `PUT`    | `/alunos/:ra`             | Atualiza dados de um aluno         |
-| `DELETE` | `/alunos/:ra`             | Remove um aluno                    |
-
----
-
-## Exemplos de uso
-
-### Listar todos os alunos
-```bash
-curl http://localhost:3000/alunos
-```
-
-### Buscar aluno por RA
-```bash
-curl http://localhost:3000/alunos/1
-```
-
-### Listar disciplinas de um aluno
-```bash
-curl http://localhost:3000/alunos/1/disciplinas
-```
-
-### Criar um novo aluno
-```bash
-curl -X POST http://localhost:3000/alunos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ra": "4",
-    "nome": "Ana",
-    "disciplinas": [
-      { "codigo": "MAT101", "nome": "Matemática", "professor": "Prof. Carlos" }
-    ]
-  }'
-```
-
-> O campo `disciplinas` é opcional na criação (padrão: `[]`).
-
-### Atualizar dados de um aluno
-```bash
-# Atualizar apenas o nome
-curl -X PUT http://localhost:3000/alunos/1 \
-  -H "Content-Type: application/json" \
-  -d '{ "nome": "João Silva" }'
-
-# Atualizar nome e disciplinas
-curl -X PUT http://localhost:3000/alunos/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "João Silva",
-    "disciplinas": [
-      { "codigo": "FIS101", "nome": "Física", "professor": "Prof. Maria" }
-    ]
-  }'
-```
-
-> O campo `ra` é **imutável** e não pode ser alterado.  
-> A atualização é **parcial**: envie apenas os campos que deseja modificar.
-
-### Deletar um aluno
-```bash
-curl -X DELETE http://localhost:3000/alunos/4
-```
-
----
-
-## Respostas da API
-
-### Sucesso — 200
-```json
-{
-  "mensagem": "Aluno com RA 1 atualizado com sucesso.",
-  "aluno": {
-    "ra": "1",
-    "nome": "João Silva",
-    "disciplinas": []
-  }
-}
-```
-
-### Criado — 201
-```json
-{
-  "mensagem": "Aluno criado com sucesso.",
-  "aluno": { "ra": "4", "nome": "Ana", "disciplinas": [] }
-}
-```
-
-### Não encontrado — 404
-```json
-{
-  "erro": "Aluno com RA 99 não encontrado."
-}
-```
-
-### Conflito — 409
-```json
-{
-  "erro": "Já existe um aluno cadastrado com o RA 4."
-}
-```
-
-### Dados inválidos — 400
-```json
-{
-  "erro": "Cada disciplina deve conter os campos \"codigo\", \"nome\" e \"professor\" preenchidos."
-}
-```
-
----
-
-## Validações
-
-- `ra` e `nome` são obrigatórios na criação e devem ser strings não vazias
-- `ra` deve ser único — tentativa de duplicata retorna `409 Conflict`
-- `disciplinas` deve ser um array; cada item precisa de `codigo`, `nome` e `professor`
-- Códigos de disciplina duplicados no mesmo aluno não são permitidos
-- Campos de texto recebem `trim()` automaticamente; `codigo` é normalizado para maiúsculas
-- `PUT` sem nenhum campo no body retorna `400`
-
----
-
-## Persistência
-
-Os dados são armazenados no **MongoDB** via driver nativo. A conexão é estabelecida na inicialização do servidor usando a variável `MONGO_URI` do `.env`. Ao reiniciar o servidor os dados **não são perdidos**. API Escola
-
-API RESTful para gerenciamento de alunos e suas disciplinas, desenvolvida com **Node.js** e **Express**, organizada em camadas (MVC).
-
----
-
-## Tecnologias
-
-- [Node.js](https://nodejs.org/) — runtime JavaScript
-- [Express](https://expressjs.com/) — framework HTTP
-- [dotenv](https://github.com/motdotla/dotenv) — variáveis de ambiente
-
----
-
-## Estrutura do projeto
-
-```
-escola-api/
-├── data/
-│   └── alunos.js           # dados em memória
-├── controllers/
-│   └── alunoController.js  # lógica de negócio e validações
-├── routes/
-│   └── alunos.js           # definição dos endpoints
-├── server.js               # configuração do Express
-├── .env                    # variáveis de ambiente (não commitar)
-├── .gitignore
-└── package.json
-```
-
----
-
-## Como executar
-
-**Pré-requisito:** Node.js 14 ou superior.
-
-```bash
-# 1. Instale as dependências
-npm install
-
-# 2. Inicie o servidor
-npm start
-```
-
-O servidor estará disponível em `http://localhost:3000`.
-
-> A porta pode ser alterada no arquivo `.env`:
-> ```env
-> PORT=3000
-> NODE_ENV=development
-> ```
-
----
-
-## Endpoints
-
-| Método   | Rota                      | Descrição                          |
-|----------|---------------------------|------------------------------------|
-| `GET`    | `/alunos`                 | Lista todos os alunos              |
-| `GET`    | `/alunos/:ra`             | Busca um aluno pelo RA             |
-| `GET`    | `/alunos/:ra/disciplinas` | Lista as disciplinas de um aluno   |
-| `POST`   | `/alunos`                 | Cria um novo aluno                 |
-| `PUT`    | `/alunos/:ra`             | Atualiza dados de um aluno         |
-| `DELETE` | `/alunos/:ra`             | Remove um aluno                    |
-
----
-
-## Exemplos de uso
-
-### Listar todos os alunos
-```bash
-curl http://localhost:3000/alunos
-```
-
-### Buscar aluno por RA
-```bash
-curl http://localhost:3000/alunos/1
-```
-
-### Listar disciplinas de um aluno
-```bash
-curl http://localhost:3000/alunos/1/disciplinas
-```
-
-### Criar um novo aluno
-```bash
-curl -X POST http://localhost:3000/alunos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ra": "4",
-    "nome": "Ana",
-    "disciplinas": [
-      { "codigo": "MAT101", "nome": "Matemática", "professor": "Prof. Carlos" }
-    ]
-  }'
-```
-
-> O campo `disciplinas` é opcional na criação (padrão: `[]`).
-
-### Atualizar dados de um aluno
-```bash
-# Atualizar apenas o nome
-curl -X PUT http://localhost:3000/alunos/1 \
-  -H "Content-Type: application/json" \
-  -d '{ "nome": "João Silva" }'
-
-# Atualizar nome e disciplinas
-curl -X PUT http://localhost:3000/alunos/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "João Silva",
-    "disciplinas": [
-      { "codigo": "FIS101", "nome": "Física", "professor": "Prof. Maria" }
-    ]
-  }'
-```
-
-> O campo `ra` é **imutável** e não pode ser alterado.  
-> A atualização é **parcial**: envie apenas os campos que deseja modificar.
-
-### Deletar um aluno
-```bash
-curl -X DELETE http://localhost:3000/alunos/4
-```
-
----
-
-## Respostas da API
-
-### Sucesso — 200
-```json
-{
-  "mensagem": "Aluno com RA 1 atualizado com sucesso.",
-  "aluno": {
-    "ra": "1",
-    "nome": "João Silva",
-    "disciplinas": []
-  }
-}
-```
-
-### Criado — 201
-```json
-{
-  "mensagem": "Aluno criado com sucesso.",
-  "aluno": { "ra": "4", "nome": "Ana", "disciplinas": [] }
-}
-```
-
-### Não encontrado — 404
-```json
-{
-  "erro": "Aluno com RA 99 não encontrado."
-}
-```
-
-### Conflito — 409
-```json
-{
-  "erro": "Já existe um aluno cadastrado com o RA 4."
-}
-```
-
-### Dados inválidos — 400
-```json
-{
-  "erro": "Cada disciplina deve conter os campos \"codigo\", \"nome\" e \"professor\" preenchidos."
-}
-```
-
----
-
-## Validações
-
-- `ra` e `nome` são obrigatórios na criação e devem ser strings não vazias
-- `ra` deve ser único — tentativa de duplicata retorna `409 Conflict`
-- `disciplinas` deve ser um array; cada item precisa de `codigo`, `nome` e `professor`
-- Códigos de disciplina duplicados no mesmo aluno não são permitidos
-- Campos de texto recebem `trim()` automaticamente; `codigo` é normalizado para maiúsculas
-- `PUT` sem nenhum campo no body retorna `400`
-
----
-
 # API Escola
 
-API RESTful para gerenciamento de alunos e suas disciplinas, desenvolvida com **Node.js** e **Express**, organizada em camadas (MVC).
+API RESTful para gerenciamento de alunos e suas disciplinas, desenvolvida com **Node.js**, **Express** e **MongoDB**, organizada em camadas (MVC).
 
 ---
 
 ## Tecnologias
 
-- [Node.js](https://nodejs.org/) — runtime JavaScript
-- [Express](https://expressjs.com/) — framework HTTP
-- [MongoDB Driver](https://www.mongodb.com/docs/drivers/node/current/) — conexão com o banco de dados
-- [dotenv](https://github.com/motdotla/dotenv) — variáveis de ambiente
+- Node.js — runtime JavaScript
+- Express — framework HTTP
+- MongoDB Driver — conexão com o banco de dados
+- dotenv — gerenciamento de variáveis de ambiente
 
 ---
 
 ## Estrutura do projeto
 
-```
+```txt
 escola-api/
-├── data/
-│   └── alunos.js           # dados em memória
 ├── controllers/
-│   └── alunoController.js  # lógica de negócio e validações
+│   └── alunoController.js
 ├── routes/
-│   └── alunos.js           # definição dos endpoints
-├── server.js               # configuração do Express
-├── .env                    # variáveis de ambiente (não commitar)
+│   └── alunos.js
+├── models/
+│   └── alunoModel.js
+├── server.js
+├── .env
 ├── .gitignore
 └── package.json
 ```
@@ -417,27 +33,24 @@ escola-api/
 
 ## Como executar
 
-**Pré-requisitos:**
+### Pré-requisitos
+
 - Node.js 14 ou superior
-- Uma instância do MongoDB acessível (local ou [MongoDB Atlas](https://www.mongodb.com/atlas))
-
-```bash
-# 1. Instale as dependências
-npm install
-
-# 2. Configure as variáveis de ambiente (veja seção abaixo)
-
-# 3. Inicie o servidor
-npm start
-```
-
-O servidor estará disponível em `http://localhost:3000`.
+- MongoDB local ou MongoDB Atlas
 
 ---
 
-## Variáveis de ambiente
+### Instalação
 
-Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
+```bash
+npm install
+```
+
+---
+
+### Variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 PORT=3000
@@ -445,44 +58,69 @@ NODE_ENV=development
 MONGO_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/<nome-do-banco>
 ```
 
-> **MongoDB Atlas:** acesse [cloud.mongodb.com](https://cloud.mongodb.com), crie um cluster gratuito e copie a connection string gerada na aba **Connect → Drivers**.  
-> **MongoDB local:** use `MONGO_URI=mongodb://localhost:27017/escola`
+#### MongoDB local
 
-O arquivo `.env` está no `.gitignore` e **não deve ser commitado**.
+```env
+MONGO_URI=mongodb://localhost:27017/escola
+```
+
+---
+
+### Iniciar servidor
+
+```bash
+npm start
+```
+
+Servidor disponível em:
+
+```txt
+http://localhost:3000
+```
 
 ---
 
 ## Endpoints
 
-| Método   | Rota                      | Descrição                          |
-|----------|---------------------------|------------------------------------|
-| `GET`    | `/alunos`                 | Lista todos os alunos              |
-| `GET`    | `/alunos/:ra`             | Busca um aluno pelo RA             |
-| `GET`    | `/alunos/:ra/disciplinas` | Lista as disciplinas de um aluno   |
-| `POST`   | `/alunos`                 | Cria um novo aluno                 |
-| `PUT`    | `/alunos/:ra`             | Atualiza dados de um aluno         |
-| `DELETE` | `/alunos/:ra`             | Remove um aluno                    |
+| Método | Rota                      | Descrição                        |
+| ------- | ------------------------- | -------------------------------- |
+| GET     | `/alunos`                 | Lista todos os alunos            |
+| GET     | `/alunos/:ra`             | Busca um aluno pelo RA           |
+| GET     | `/alunos/:ra/disciplinas` | Lista disciplinas de um aluno    |
+| POST    | `/alunos`                 | Cria um novo aluno               |
+| PUT     | `/alunos/:ra`             | Atualiza dados de um aluno       |
+| DELETE  | `/alunos/:ra`             | Remove um aluno                  |
 
 ---
 
 ## Exemplos de uso
 
-### Listar todos os alunos
+### Listar alunos
+
 ```bash
 curl http://localhost:3000/alunos
 ```
 
+---
+
 ### Buscar aluno por RA
+
 ```bash
 curl http://localhost:3000/alunos/1
 ```
 
-### Listar disciplinas de um aluno
+---
+
+### Listar disciplinas
+
 ```bash
 curl http://localhost:3000/alunos/1/disciplinas
 ```
 
-### Criar um novo aluno
+---
+
+### Criar aluno
+
 ```bash
 curl -X POST http://localhost:3000/alunos \
   -H "Content-Type: application/json" \
@@ -490,35 +128,33 @@ curl -X POST http://localhost:3000/alunos \
     "ra": "4",
     "nome": "Ana",
     "disciplinas": [
-      { "codigo": "MAT101", "nome": "Matemática", "professor": "Prof. Carlos" }
+      {
+        "codigo": "MAT101",
+        "nome": "Matemática",
+        "professor": "Prof. Carlos"
+      }
     ]
   }'
 ```
 
-> O campo `disciplinas` é opcional na criação (padrão: `[]`).
+> O campo `disciplinas` é opcional.
 
-### Atualizar dados de um aluno
+---
+
+### Atualizar aluno
+
 ```bash
-# Atualizar apenas o nome
-curl -X PUT http://localhost:3000/alunos/1 \
-  -H "Content-Type: application/json" \
-  -d '{ "nome": "João Silva" }'
-
-# Atualizar nome e disciplinas
 curl -X PUT http://localhost:3000/alunos/1 \
   -H "Content-Type: application/json" \
   -d '{
-    "nome": "João Silva",
-    "disciplinas": [
-      { "codigo": "FIS101", "nome": "Física", "professor": "Prof. Maria" }
-    ]
+    "nome": "João Silva"
   }'
 ```
 
-> O campo `ra` é **imutável** e não pode ser alterado.  
-> A atualização é **parcial**: envie apenas os campos que deseja modificar.
+---
 
-### Deletar um aluno
+### Deletar aluno
+
 ```bash
 curl -X DELETE http://localhost:3000/alunos/4
 ```
@@ -527,10 +163,11 @@ curl -X DELETE http://localhost:3000/alunos/4
 
 ## Respostas da API
 
-### Sucesso — 200
+### 200 — Sucesso
+
 ```json
 {
-  "mensagem": "Aluno com RA 1 atualizado com sucesso.",
+  "mensagem": "Aluno atualizado com sucesso.",
   "aluno": {
     "ra": "1",
     "nome": "João Silva",
@@ -539,32 +176,48 @@ curl -X DELETE http://localhost:3000/alunos/4
 }
 ```
 
-### Criado — 201
+---
+
+### 201 — Criado
+
 ```json
 {
   "mensagem": "Aluno criado com sucesso.",
-  "aluno": { "ra": "4", "nome": "Ana", "disciplinas": [] }
+  "aluno": {
+    "ra": "4",
+    "nome": "Ana",
+    "disciplinas": []
+  }
 }
 ```
 
-### Não encontrado — 404
+---
+
+### 400 — Dados inválidos
+
 ```json
 {
-  "erro": "Aluno com RA 99 não encontrado."
+  "erro": "Dados inválidos."
 }
 ```
 
-### Conflito — 409
+---
+
+### 404 — Não encontrado
+
 ```json
 {
-  "erro": "Já existe um aluno cadastrado com o RA 4."
+  "erro": "Aluno não encontrado."
 }
 ```
 
-### Dados inválidos — 400
+---
+
+### 409 — Conflito
+
 ```json
 {
-  "erro": "Cada disciplina deve conter os campos \"codigo\", \"nome\" e \"professor\" preenchidos."
+  "erro": "Já existe um aluno com este RA."
 }
 ```
 
@@ -572,17 +225,20 @@ curl -X DELETE http://localhost:3000/alunos/4
 
 ## Validações
 
-- `ra` e `nome` são obrigatórios na criação e devem ser strings não vazias
-- `ra` deve ser único — tentativa de duplicata retorna `409 Conflict`
-- `disciplinas` deve ser um array; cada item precisa de `codigo`, `nome` e `professor`
-- Códigos de disciplina duplicados no mesmo aluno não são permitidos
-- Campos de texto recebem `trim()` automaticamente; `codigo` é normalizado para maiúsculas
-- `PUT` sem nenhum campo no body retorna `400`
+- `ra` e `nome` são obrigatórios
+- `ra` deve ser único
+- `disciplinas` deve ser um array
+- Cada disciplina deve conter:
+  - `codigo`
+  - `nome`
+  - `professor`
+- O campo `ra` não pode ser alterado
+- `PUT` sem body retorna `400`
 
 ---
 
 ## Persistência
 
-Os dados são armazenados no **MongoDB** via driver nativo. A conexão é estabelecida na inicialização do servidor usando a variável `MONGO_URI` do `.env`. Ao reiniciar o servidor os dados **não são perdidos**.
+Os dados são armazenados no MongoDB utilizando a variável `MONGO_URI` definida no `.env`.
 
-
+Os dados permanecem salvos mesmo após reiniciar o servidor.
